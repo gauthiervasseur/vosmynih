@@ -98,12 +98,12 @@ nav button { font: 9px var(--px); color: var(--grn); background: none; border: 2
 .dl .meta { font-size: 13px; color: var(--dim); margin: 0 0 18px; overflow-wrap: anywhere; }
 .dl .soon { margin-top: auto; font: 9px/1.8 var(--px); color: var(--dim); border: 3px dashed var(--line); padding: 14px; text-align: center; }
 @media (max-width: 900px) { .dl { grid-template-columns: 1fr; } }
-.req { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 34px; }
+.req { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 34px; }
 .req ol, .req ul { margin: 0; padding-left: 20px; color: var(--dim); }
 .req li { margin-bottom: 8px; }
 .req b { color: var(--ink); font-weight: normal; }
 code { font-family: var(--mono); color: var(--yel); background: var(--bg3); padding: 1px 5px; }
-@media (max-width: 760px) { .req { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .req { grid-template-columns: 1fr; } }
 
 /* faq */
 details { background: var(--bg2); border: 3px solid var(--line); margin-bottom: 12px; }
@@ -154,7 +154,7 @@ footer .px { font-size: 10px; color: var(--yel); margin-bottom: 14px; animation:
     <p class="lede">Eight tentacles, one job: take a slide deck exported from Marp and hand you back a PowerPoint where every title, bullet,
       table and picture sits exactly where the HTML put it, and stays editable.</p>
     <div class="ctas">
-      <a class="btn main" href="#download">▶ DOWNLOAD FOR MAC<small>APPLE SILICON · 23 MB</small></a>
+      <a class="btn main" href="#download">▶ DOWNLOAD<small>MAC · WINDOWS</small></a>
       <a class="btn alt" href="#demo">PLAY THE DEMO<small>IN YOUR BROWSER</small></a>
     </div>
   </div>
@@ -222,8 +222,13 @@ footer .px { font-size: 10px; color: var(--yel); margin-bottom: 14px; animation:
     <div class="dl">
       <div class="card"><h3>MAC · APPLE SILICON (M1-M4)</h3><p class="meta">vosmynih-1.0.0-macos-arm64.dmg · macOS 11 or later<br>SHA-256: a8e71e5a57314d64…</p>
         <a class="btn main" href="downloads/vosmynih-1.0.0-macos-arm64.dmg" download>▶ DOWNLOAD .DMG<small>23 MB</small></a></div>
-      <div class="card"><h3>WINDOWS</h3><p class="meta">Build the installer on a Windows PC with <code>build\build_windows.ps1</code> (in the source download). It makes a setup.exe and a portable zip.</p><div class="soon">INSTALLER<br>BUILT FROM SOURCE</div></div>
-      <div class="card"><h3>SOURCE CODE</h3><p class="meta">vosmynih-1.0.0-source.zip · Python app, converter, build scripts<br>SHA-256: 2563451631d17334…</p>
+      <div class="card"><h3>MAC · INTEL</h3><p class="meta">vosmynih-1.0.0-macos-x86_64.dmg · macOS 11 or later<br>SHA-256: 03b8736ad0137f78…</p>
+        <a class="btn main" href="downloads/vosmynih-1.0.0-macos-x86_64.dmg" download>▶ DOWNLOAD .DMG<small>25 MB</small></a></div>
+      <div class="card"><h3>WINDOWS · SETUP.EXE</h3><p class="meta">vosmynih-1.0.0-windows-x64-setup.exe · Windows 10 or 11<br>SHA-256: 90466c4db91675a2…</p>
+        <a class="btn main" href="downloads/vosmynih-1.0.0-windows-x64-setup.exe" download>▶ DOWNLOAD SETUP.EXE<small>19 MB</small></a></div>
+      <div class="card"><h3>WINDOWS · PORTABLE .ZIP</h3><p class="meta">vosmynih-1.0.0-windows-x64.zip · Windows 10 or 11<br>SHA-256: 769f783c61a30d2e…</p>
+        <a class="btn main" href="downloads/vosmynih-1.0.0-windows-x64.zip" download>▶ DOWNLOAD PORTABLE .ZIP<small>24 MB</small></a></div>
+      <div class="card"><h3>SOURCE CODE</h3><p class="meta">vosmynih-1.0.0-source.zip · Python app, converter, build scripts<br>SHA-256: dc4b0a45d2dabefe…</p>
         <a class="btn main" href="downloads/vosmynih-1.0.0-source.zip" download>▶ DOWNLOAD SOURCE<small>333 KB</small></a></div>
     </div>
     <div class="req">
@@ -231,9 +236,13 @@ footer .px { font-size: 10px; color: var(--yel); margin-bottom: 14px; animation:
         <ol><li>Open the <code>.dmg</code> and drag <b>восьминіг</b> onto <b>Applications</b>.</li>
             <li>First launch: right-click the app, choose <b>Open</b>, then <b>Open</b> again. The app is not notarised by Apple, so macOS asks once.</li>
             <li>The octopus says hello. Insert a deck.</li></ol></div>
+      <div class="card"><h3>INSTALL ON WINDOWS</h3>
+        <ol><li>Run the <code>setup.exe</code>, or unzip the portable <code>.zip</code> anywhere and open <b>vosmynih.exe</b>.</li>
+            <li>If SmartScreen warns you, click <b>More info</b>, then <b>Run anyway</b>. The app is not code-signed, so Windows asks once.</li>
+            <li>The octopus says hello. Insert a deck.</li></ol></div>
       <div class="card"><h3>SYSTEM REQUIREMENTS</h3>
-        <ul><li><b>macOS 11+</b> (Apple Silicon).</li>
-            <li><b>Google Chrome</b>: it measures the layout and paints the backdrops. Without it you get an approximate layout.</li>
+        <ul><li><b>macOS 11+</b> (Apple Silicon or Intel), or <b>Windows 10/11</b> (64-bit).</li>
+            <li><b>Google Chrome</b> (or Microsoft Edge): it measures the layout and paints the backdrops. Without it you get an approximate layout.</li>
             <li><b>Microsoft Office</b>: its Calibri font makes line breaks match PowerPoint exactly.</li>
             <li>Decks exported by <b>Marp</b> (HTML).</li></ul></div>
     </div>
@@ -246,7 +255,7 @@ footer .px { font-size: 10px; color: var(--yel); margin-bottom: 14px; animation:
     <details><summary>IS MY DECK UPLOADED ANYWHERE?</summary><p>No. Everything runs on your computer: the app reads the HTML and its images from disk and writes the .pptx next to it. Only images your deck links from the web are downloaded, and you can switch that off (WEB IMAGES: OFF).</p></details>
     <details><summary>WHY DOES IT NEED CHROME?</summary><p>Your deck's look comes from CSS. Rather than guessing, the octopus asks a real browser engine where every element goes, then rebuilds that layout from native PowerPoint objects.</p></details>
     <details><summary>WHY ARE THERE LINE BREAKS IN MY PARAGRAPHS?</summary><p>To guarantee that each line wraps exactly as in the HTML, wrapped lines get soft line breaks (Shift+Enter). If you rewrite a paragraph, delete them, or turn COPY LINE BREAKS off before converting.</p></details>
-    <details><summary>WHAT ABOUT WINDOWS?</summary><p>The app runs on Windows too; this release ships the build script (<code>build\build_windows.ps1</code>, in the source download) that makes a setup.exe on a Windows PC.</p></details>
+    <details><summary>WHAT ABOUT WINDOWS?</summary><p>Yes: download the setup.exe (or the portable zip) above. On Windows the octopus uses Chrome or the built-in Microsoft Edge to measure the layout, and Calibri ships with Windows.</p></details>
     <details><summary>WHY AN OCTOPUS?</summary><p>Восьминіг is Ukrainian for octopus. Eight arms are about what it takes to move titles, bullets, tables, code, pictures, equations, backdrops and notes at once.</p></details>
   </div>
 </section>
@@ -254,6 +263,7 @@ footer .px { font-size: 10px; color: var(--yel); margin-bottom: 14px; animation:
 <footer>
   <div class="wrap">
     <div class="px">GAME OVER? INSERT COIN TO CONTINUE</div>
+    <p>Designed by Data Wise Academy - <a href="https://www.datawiseacademy.com">www.datawiseacademy.com</a></p>
     <p>восьминіг v1.0.0 · Pixel font: Press Start 2P (SIL Open Font License) · Octopus sound synthesised from scratch</p>
   </div>
 </footer>
