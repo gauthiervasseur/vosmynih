@@ -1,0 +1,5 @@
+python-pptx
+beautifulsoup4
+lxml
+pillow
+pywebview>=5

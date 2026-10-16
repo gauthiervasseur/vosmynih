@@ -1,0 +1,5 @@
+python-pptx
+beautifulsoup4
+lxml
+pillow
+cairosvg  # optional, for MathJax equations

@@ -1,0 +1,35 @@
+# Template: builds the macOS (Apple Silicon + Intel) DMGs and the Windows installer in the cloud.
+# To use it, copy this file to <repo root>/.github/workflows/vosmynih.yml and push a tag "vosmynih-v*".
+# If marp2pptx/ is not at the repo root, keep APP_DIR below pointing at it.
+name: vosmynih
+on:
+  workflow_dispatch:
+  push:
+    tags: ["vosmynih-v*"]
+env:
+  APP_DIR: marp2pptx
+jobs:
+  macos:
+    strategy:
+      matrix:
+        runner: [macos-14, macos-13]          # arm64, x86_64
+    runs-on: ${{ matrix.runner }}
+    defaults: { run: { working-directory: "${{ env.APP_DIR }}" } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: ./build/build_macos.sh python
+      - uses: actions/upload-artifact@v4
+        with: { name: "vosmynih-${{ matrix.runner }}", path: "${{ env.APP_DIR }}/dist/*.dmg" }
+  windows:
+    runs-on: windows-latest
+    defaults: { run: { working-directory: "${{ env.APP_DIR }}" } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: choco install innosetup -y --no-progress
+      - run: powershell -ExecutionPolicy Bypass -File build\build_windows.ps1
+      - uses: actions/upload-artifact@v4
+        with: { name: vosmynih-windows, path: "${{ env.APP_DIR }}/dist/*-windows-x64*" }

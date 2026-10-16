@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>восьминіг</title>
+<style>
+@font-face { font-family: 'Press Start 2P'; src: url(PressStart2P-Regular.ttf) format('truetype'); font-display: block; }
+:root {
+  --bg: #0b0221; --bg2: #160740; --mag: #ff2bd6; --cyan: #22e8ff; --yel: #ffe83b; --grn: #39ff14;
+  --red: #ff3b5c; --ink: #ece8ff; --dim: #8f84c9; --line: #3a1d7a;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); overflow: hidden; }
+body {
+  font: 10px/1.7 'Press Start 2P', monospace; letter-spacing: .02em;
+  -webkit-font-smoothing: none; user-select: none; -webkit-user-select: none;
+  background: radial-gradient(ellipse 120% 70% at 50% 0%, #2a0b5e 0%, var(--bg) 60%);
+}
+button, input { font: inherit; color: inherit; }
+
+/* ---------- scenery ---------- */
+#stars { position: fixed; inset: 0; pointer-events: none; }
+.floor {
+  position: fixed; left: -50%; right: -50%; bottom: -10px; height: 34vh; pointer-events: none;
+  background:
+    repeating-linear-gradient(to right, transparent 0 58px, rgba(255,43,214,.55) 58px 60px),
+    repeating-linear-gradient(to bottom, transparent 0 38px, rgba(255,43,214,.55) 38px 40px);
+  transform: perspective(260px) rotateX(62deg); transform-origin: 50% 100%;
+  animation: floor 1.2s linear infinite;
+  mask-image: linear-gradient(to top, #000 30%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, #000 30%, transparent 100%);
+}
+@keyframes floor { to { background-position: 0 0, 0 40px; } }
+.sun {
+  position: fixed; left: 50%; bottom: 30vh; width: 220px; height: 110px; margin-left: -110px; pointer-events: none;
+  border-radius: 110px 110px 0 0; opacity: .16;
+  background: repeating-linear-gradient(to bottom, #ffe83b 0 9px, transparent 9px 12px), linear-gradient(#ffe83b, #ff2bd6);
+  background-blend-mode: multiply;
+  -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0 9px, transparent 9px 13px);
+  mask-image: repeating-linear-gradient(to bottom, #000 0 9px, transparent 9px 13px);
+}
+.crt { position: fixed; inset: 0; pointer-events: none; z-index: 50;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
+  box-shadow: inset 0 0 140px rgba(0,0,0,.85); animation: flicker 6s infinite; }
+@keyframes flicker { 0%,97%,100% { opacity: 1 } 98% { opacity: .85 } 99% { opacity: .95 } }
+
+/* ---------- layout ---------- */
+.screen { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; padding: 14px 22px 10px; }
+.hud { display: flex; justify-content: space-between; color: var(--dim); }
+.hud b { display: block; color: var(--ink); font-weight: normal; font-size: 12px; margin-top: 4px; }
+.hud .p1 b { color: var(--red); }
+.hud .hi b { color: var(--yel); }
+.hud .cr { text-align: right; }
+.hud .cr b { color: var(--cyan); }
+
+.hero { display: flex; flex-direction: column; align-items: center; margin-top: 6px; }
+#octo { image-rendering: pixelated; width: 161px; height: 140px; }
+h1 {
+  margin: 4px 0 0; font-size: 40px; line-height: 1.15; font-weight: normal; letter-spacing: .04em;
+  color: #fff; text-shadow: 0 0 6px var(--mag), 0 0 18px var(--mag), 4px 4px 0 #6a0b8f;
+}
+.sub { margin-top: 8px; color: var(--cyan); text-shadow: 0 0 8px rgba(34,232,255,.7); }
+.sub i { font-style: normal; color: var(--yel); animation: blink 1s steps(2) infinite; }
+
+.panel { width: min(760px, 100%); margin: 16px auto 0; }
+.slot {
+  width: 100%; display: flex; align-items: center; gap: 16px; padding: 14px 16px; cursor: pointer; text-align: left;
+  background: rgba(22,7,64,.85); border: 3px dashed var(--cyan); outline: none;
+  box-shadow: 0 0 0 3px var(--bg), 0 0 18px rgba(34,232,255,.25) inset;
+}
+.slot:hover, .slot.drag { border-style: solid; box-shadow: 0 0 0 3px var(--bg), 0 0 22px rgba(34,232,255,.6); }
+.slot:focus-visible { border-color: var(--yel); }
+.cart { flex: none; width: 44px; height: 52px; background: var(--mag); position: relative;
+  box-shadow: inset -6px -6px 0 #a3127f, 0 0 0 3px #000; }
+.cart::before { content: ''; position: absolute; left: 8px; right: 8px; top: 8px; height: 18px; background: var(--bg2); }
+.cart::after { content: ''; position: absolute; left: 6px; right: 6px; bottom: 0; height: 8px;
+  background: repeating-linear-gradient(to right, var(--yel) 0 4px, transparent 4px 7px); }
+.slot .t { color: var(--yel); font-size: 12px; }
+.slot .d { color: var(--dim); margin-top: 8px; word-break: break-all; }
+.slot.loaded .t { color: var(--grn); }
+
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 22px; margin-top: 14px; }
+.tog { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; cursor: pointer;
+  background: transparent; border: 0; border-bottom: 2px solid var(--line); text-align: left; }
+.tog:hover, .tog:focus-visible { outline: none; border-bottom-color: var(--cyan); }
+.tog:hover::before, .tog:focus-visible::before { content: '▶'; color: var(--yel); margin-left: -16px; margin-right: 6px; }
+.tog .v { padding: 3px 7px; min-width: 50px; text-align: center; background: var(--grn); color: #001a00; }
+.tog[aria-pressed="false"] .v { background: #3b2b66; color: var(--dim); }
+.field { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-bottom: 2px solid var(--line); }
+.field label { flex: none; }
+.field input { flex: 1; min-width: 0; background: var(--bg2); border: 2px solid var(--line); padding: 6px 8px; outline: none; color: var(--yel); }
+.field input:focus { border-color: var(--cyan); }
+.field button { background: none; border: 2px solid var(--line); padding: 6px 8px; cursor: pointer; color: var(--cyan); white-space: nowrap; }
+.field button:hover { border-color: var(--cyan); }
+.out { grid-column: 1 / -1; }
+.out span { flex: 1; min-width: 0; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.start {
+  display: block; margin: 18px auto 0; padding: 16px 34px; font-size: 16px; cursor: pointer; color: #1a0033;
+  background: var(--yel); border: 0; box-shadow: 0 0 0 4px #000, 6px 6px 0 4px var(--mag), 0 0 30px rgba(255,232,59,.45);
+  animation: pulse 1.2s steps(2) infinite;
+}
+.start:hover { background: #fff36e; }
+.start:active { transform: translate(4px, 4px); box-shadow: 0 0 0 4px #000, 2px 2px 0 4px var(--mag); }
+.start:disabled { animation: none; background: #3b2b66; color: var(--dim); cursor: default; box-shadow: 0 0 0 4px #000; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 4px #000, 6px 6px 0 4px var(--mag), 0 0 6px rgba(255,232,59,.2); } }
+@keyframes blink { 50% { opacity: 0; } }
+
+.run { margin-top: 16px; display: none; }
+body.running .opts, body.running .start { display: none; }
+body.running .run { margin-top: 26px; }
+body.running .log { height: 96px; }
+.run.on { display: block; }
+.stage { display: flex; justify-content: space-between; color: var(--cyan); }
+.stage b { color: var(--yel); font-weight: normal; }
+.bar { display: grid; grid-template-columns: repeat(40, 1fr); gap: 3px; margin-top: 8px; padding: 4px; border: 3px solid var(--ink); }
+.bar i { height: 14px; background: #24124f; }
+.bar i.f { background: var(--grn); box-shadow: 0 0 6px var(--grn); }
+.bar i.s { background: var(--yel); }
+.log { margin-top: 10px; height: 64px; overflow: hidden; color: var(--grn); opacity: .85; font-size: 8px; line-height: 2; white-space: pre; text-overflow: ellipsis; }
+
+.foot { margin-top: auto; display: flex; justify-content: space-between; color: var(--dim); font-size: 8px; padding-top: 8px; }
+.foot .ok { color: var(--grn); } .foot .no { color: var(--red); }
+.foot button { background: none; border: 0; cursor: pointer; color: var(--dim); padding: 0; }
+.foot button:hover { color: var(--ink); }
+
+/* ---------- overlays ---------- */
+.ov { position: fixed; inset: 0; z-index: 40; display: none; align-items: center; justify-content: center;
+  background: rgba(11,2,33,.86); }
+.ov.on { display: flex; }
+.card { text-align: center; padding: 30px 40px; background: var(--bg2); border: 4px solid var(--cyan);
+  box-shadow: 0 0 0 4px #000, 0 0 40px rgba(34,232,255,.4); max-width: 640px; }
+.card h2 { margin: 0 0 18px; font-size: 26px; font-weight: normal; color: var(--yel); text-shadow: 3px 3px 0 var(--mag); }
+.card.bad { border-color: var(--red); box-shadow: 0 0 0 4px #000, 0 0 40px rgba(255,59,92,.4); }
+.card.bad h2 { color: var(--red); text-shadow: 3px 3px 0 #5b0016; }
+.stats { display: grid; grid-template-columns: auto auto; gap: 10px 26px; justify-content: center; text-align: left; margin: 0 0 22px; }
+.stats dt { color: var(--dim); } .stats dd { margin: 0; color: var(--grn); }
+.card p { color: var(--ink); line-height: 2; word-break: break-word; }
+.btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.btn { padding: 12px 16px; cursor: pointer; background: transparent; border: 3px solid var(--ink); }
+.btn:hover, .btn:focus-visible { outline: none; border-color: var(--yel); color: var(--yel); }
+.btn.main { background: var(--grn); color: #001a00; border-color: var(--grn); }
+.btn.main:hover { background: #8dff70; color: #001a00; }
+#attract { cursor: pointer; flex-direction: column; gap: 22px; background: rgba(11,2,33,.97); }
+#attract .big { font-size: 18px; color: var(--yel); animation: blink 1s steps(2) infinite; }
+#attract small { color: var(--dim); }
+.demo-badge { position: fixed; right: 12px; bottom: 30px; z-index: 30; color: var(--bg); background: var(--yel); padding: 4px 6px; font-size: 8px; display: none; }
+@media (max-height: 700px) { #octo { width: 115px; height: 100px; } h1 { font-size: 30px; } .opts { margin-top: 10px; } .start { margin-top: 12px; padding: 12px 28px; } }
+@media (prefers-reduced-motion: reduce) { .floor, .start, .sub i, #attract .big, .crt { animation: none; } }
+</style>
+<script src="sprite.js"></script>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div class="sun"></div>
+<div class="floor"></div>
+
+<main class="screen">
+  <header class="hud">
+    <div class="p1">1UP<b id="score">000000</b></div>
+    <div class="hi" style="text-align:center">HI-SCORE<b id="hiscore">000000</b></div>
+    <div class="cr">CREDITS<b id="credits">00</b></div>
+  </header>
+
+  <section class="hero">
+    <canvas id="octo" width="161" height="140" aria-label="Pixel octopus"></canvas>
+    <h1>ВОСЬМИНІГ</h1>
+    <div class="sub">HTML DECK <i>▶</i> POWERPOINT</div>
+  </section>
+
+  <section class="panel">
+    <button class="slot" id="slot" type="button">
+      <span class="cart" aria-hidden="true"></span>
+      <span><span class="t" id="slotT">INSERT DECK</span><span class="d" id="slotD" style="display:block">CLICK OR DROP A MARP .HTML FILE HERE</span></span>
+    </button>
+
+    <div class="opts">
+      <button class="tog" type="button" data-k="exact" aria-pressed="true"><span>EXACT LAYOUT</span><span class="v">ON</span></button>
+      <button class="tog" type="button" data-k="backgrounds" aria-pressed="true"><span>THEME BACKDROPS</span><span class="v">ON</span></button>
+      <button class="tog" type="button" data-k="breaks" aria-pressed="true"><span>COPY LINE BREAKS</span><span class="v">ON</span></button>
+      <button class="tog" type="button" data-k="video" aria-pressed="true"><span>EMBED VIDEOS</span><span class="v">ON</span></button>
+      <div class="field"><label for="slides">SLIDES</label><input id="slides" placeholder="ALL" spellcheck="false" autocomplete="off"></div>
+      <button class="tog" type="button" data-k="download" aria-pressed="true"><span>WEB IMAGES</span><span class="v">ON</span></button>
+      <div class="field out"><label>SAVE TO</label><span id="outPath">NEXT TO THE DECK</span><button type="button" id="outBtn">CHANGE</button></div>
+    </div>
+
+    <button class="start" id="start" type="button" disabled>PRESS START</button>
+
+    <div class="run" id="run">
+      <div class="stage"><span id="stageName">STAGE 1</span><b id="stageCount"></b></div>
+      <div class="bar" id="bar"></div>
+      <div class="log" id="log"></div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span id="env">CHECKING CABINET...</span>
+    <span><button type="button" id="mute">SOUND ON</button> · v<span id="ver">1.0.0</span></span>
+  </footer>
+</main>
+
+<div class="ov" id="win" role="dialog" aria-modal="true" aria-labelledby="winT">
+  <div class="card">
+    <h2 id="winT">STAGE CLEAR!</h2>
+    <dl class="stats" id="winStats"></dl>
+    <div class="btns">
+      <button class="btn main" type="button" id="openBtn">OPEN PPTX</button>
+      <button class="btn" type="button" id="revealBtn">SHOW FILE</button>
+      <button class="btn" type="button" id="againBtn">PLAY AGAIN</button>
+    </div>
+  </div>
+</div>
+<div class="ov" id="lose" role="dialog" aria-modal="true" aria-labelledby="loseT">
+  <div class="card bad">
+    <h2 id="loseT">GAME OVER</h2>
+    <p id="loseMsg"></p>
+    <div class="btns"><button class="btn main" type="button" id="contBtn">CONTINUE?</button></div>
+  </div>
+</div>
+<div class="ov" id="attract">
+  <canvas id="octo2" width="161" height="140" style="image-rendering:pixelated;width:230px;height:200px" aria-hidden="true"></canvas>
+  <h1 style="font-size:34px">ВОСЬМИНІГ</h1>
+  <div class="big">PRESS ANY KEY</div>
+  <small>TO WAKE THE OCTOPUS</small>
+</div>
+<div class="demo-badge" id="demoBadge">DEMO MODE</div>
+<div class="crt"></div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const store = { get(k, d) { try { const v = localStorage.getItem('octo.' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+                  set(k, v) { try { localStorage.setItem('octo.' + k, JSON.stringify(v)); } catch (e) {} } };
+
+  /* ---------------- sound (WebAudio chiptune) ---------------- */
+  let actx = null, muted = store.get('muted', false);
+  const ac = () => { if (!actx) { const C = window.AudioContext || window.webkitAudioContext; if (C) actx = new C(); }
+                     if (actx && actx.state === 'suspended') actx.resume(); return actx; };
+  function tone(f, t0, dur, type = 'square', vol = .08, slideTo = null) {
+    const a = ac(); if (!a || muted) return;
+    const o = a.createOscillator(), g = a.createGain(), t = a.currentTime + t0;
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g).connect(a.destination); o.start(t); o.stop(t + dur + .02);
+  }
+  const sfx = {
+    blip: () => tone(880, 0, .05, 'square', .05),
+    coin: () => { tone(988, 0, .08); tone(1319, .08, .28); },
+    start: () => [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, i * .07, .09, 'square', .07)),
+    tick: () => tone(1500, 0, .02, 'square', .025),
+    win: () => [523, 523, 523, 659, 784, 659, 784, 1047].forEach((f, i) => tone(f, i * .11, i === 7 ? .45 : .1, 'square', .08)),
+    lose: () => [392, 370, 349, 330].forEach((f, i) => tone(f, i * .22, .24, 'sawtooth', .06)),
+    bubble: () => tone(300, 0, .09, 'square', .05, 1100),
+  };
+  let intro = null;
+  function playIntro() {              // the octopus sound (the desktop app plays it natively at launch)
+    if (muted) return Promise.resolve();
+    intro = intro || new Audio('octopus.wav');
+    intro.currentTime = 0;
+    return intro.play();
+  }
+  function setMute(m) { muted = m; store.set('muted', m); $('mute').textContent = m ? 'SOUND OFF' : 'SOUND ON'; }
+  $('mute').onclick = () => { setMute(!muted); if (!muted) sfx.blip(); };
+  setMute(muted);
+
+  /* ---------------- stars ---------------- */
+  const sc = $('stars');
+  function stars() {
+    sc.width = innerWidth; sc.height = innerHeight; const g = sc.getContext('2d');
+    for (let i = 0; i < 110; i++) { g.fillStyle = ['#fff', '#22e8ff', '#ff2bd6', '#ffe83b'][i % 4];
+      const s = Math.random() < .15 ? 2 : 1; g.fillRect(Math.random() * sc.width | 0, Math.random() * sc.height * .7 | 0, s, s); }
+  }
+  addEventListener('resize', stars); stars();
+
+  /* ---------------- the octopus ---------------- */
+  const oc = $('octo'), og = oc.getContext('2d'), P = 7, O = window.OCTO;
+  const bubbles = []; let frame = 0, tick = 0, blinkT = 0, mood = 'idle';
+  function drawOcto() {
+    og.clearRect(0, 0, oc.width, oc.height);
+    const speed = mood === 'busy' ? 4 : mood === 'party' ? 3 : 9;
+    if (tick % speed === 0) frame ^= 1;
+    const bob = Math.round(Math.sin(tick / (mood === 'party' ? 3 : 8)) * (mood === 'party' ? 6 : 3));
+    const rows = O.frames[frame], blink = blinkT > 0;
+    rows.forEach((row, r) => [...row].forEach((ch, c) => {
+      if (ch === '.') return;
+      let col = O.palette[ch];
+      if (blink && (ch === 'W' || ch === 'K')) col = O.palette.M;
+      og.fillStyle = col; og.fillRect(c * P, 20 + r * P + bob, P, P);
+    }));
+    if (blinkT > 0) blinkT--; else if (Math.random() < .006) blinkT = 6;
+    if (Math.random() < (mood === 'busy' ? .25 : .05)) bubbles.push({ x: 40 + Math.random() * 80, y: 30 + bob, s: Math.random() < .3 ? 5 : 3, v: .6 + Math.random() });
+    og.strokeStyle = '#22e8ff'; og.lineWidth = 1;
+    for (let i = bubbles.length - 1; i >= 0; i--) { const b = bubbles[i]; b.y -= b.v; b.x += Math.sin((tick + i) / 5) * .4;
+      og.strokeRect(Math.round(b.x) + .5, Math.round(b.y) + .5, b.s, b.s); if (b.y < -6) bubbles.splice(i, 1); }
+    tick++;
+    const o2 = $('octo2');
+    if (o2 && $('attract').classList.contains('on')) { const g2 = o2.getContext('2d'); g2.clearRect(0, 0, 161, 140); g2.drawImage(oc, 0, 0); }
+  }
+  setInterval(drawOcto, 33);
+
+  /* ---------------- state ---------------- */
+  const opts = { exact: true, backgrounds: true, breaks: true, video: true, download: true };
+  let deck = null, output = null, running = false, lastSummary = null, score = 0;
+  const pad = (n, w) => String(Math.max(0, n | 0)).padStart(w, '0');
+  const hud = () => { $('score').textContent = pad(score, 6); $('hiscore').textContent = pad(store.get('hi', 0), 6);
+                      $('credits').textContent = pad(store.get('credits', 0), 2); };
+  hud();
+
+  document.querySelectorAll('.tog').forEach(b => b.onclick = () => {
+    const k = b.dataset.k; opts[k] = !opts[k]; b.setAttribute('aria-pressed', opts[k]);
+    b.querySelector('.v').textContent = opts[k] ? 'ON' : 'OFF'; sfx.blip();
+  });
+
+  const bar = $('bar'); for (let i = 0; i < 40; i++) bar.appendChild(document.createElement('i'));
+  function setBar(frac, scanAt) {
+    const n = Math.round(frac * 40);
+    [...bar.children].forEach((c, i) => { c.className = i < n ? 'f' : (i === scanAt ? 's' : ''); });
+  }
+  function log(t) { const el = $('log'); const lines = (el.textContent + '\n' + t.toUpperCase()).split('\n').filter(Boolean).slice(-4);
+                    el.textContent = lines.join('\n'); }
+
+  function showDeck(d) {
+    if (!d) return;
+    if (d.error) { gameOver(d.error); return; }
+    deck = d; output = null; $('outPath').textContent = 'NEXT TO THE DECK';
+    $('slot').classList.add('loaded'); $('slotT').textContent = d.name;
+    $('slotD').textContent = `${d.slides} SLIDES · ${d.size_mb} MB · ${d.folder}`;
+    $('start').disabled = false; sfx.coin(); $('start').focus();
+  }
+
+  /* ---------------- progress model ---------------- */
+  const STAGES = {
+    read: ['STAGE 1 · READING THE DECK', 0, .03],
+    backgrounds: ['STAGE 2 · PAINTING BACKDROPS', .03, .13],
+    layout: ['STAGE 3 · MEASURING EVERY PIXEL', .13, .45],
+    slides: ['STAGE 4 · INKING THE SLIDES', .45, .95],
+    save: ['STAGE 5 · SAVING THE .PPTX', .95, 1],
+  };
+  let cur = null, curStart = 0, scan = 0, anim = null, lastTick = 0;
+  function onProgress(stage, done, total) {
+    const st = STAGES[stage]; if (!st) return;
+    if (cur !== stage) { cur = stage; curStart = performance.now(); $('stageName').textContent = st[0]; $('stageCount').textContent = '';
+                         if (stage !== 'read') sfx.bubble(); }
+    if (stage === 'slides') {
+      $('stageCount').textContent = `${done}/${total}`; score = done; hud();
+      setBar(st[1] + (st[2] - st[1]) * done / Math.max(total, 1));
+      if (done - lastTick >= Math.max(1, total / 20)) { sfx.tick(); lastTick = done; }
+    }
+  }
+  function animate() {   // indeterminate stages creep forward, with a scanning block
+    if (!running) return;
+    const st = STAGES[cur];
+    if (st && cur !== 'slides') {
+      const t = (performance.now() - curStart) / 1000, est = cur === 'layout' ? 45 : 12;
+      const frac = st[1] + (st[2] - st[1]) * (1 - Math.exp(-t / est)) * .95;
+      scan = (scan + 1) % 40; setBar(frac, scan);
+    }
+    anim = requestAnimationFrame(animate);
+  }
+
+  /* ---------------- backend: real app or demo ---------------- */
+  const api = () => window.pywebview && window.pywebview.api;
+  window.octo = {   // events pushed by the Python side
+    event(e) {
+      if (e.type === 'progress') onProgress(e.stage, e.done, e.total);
+      else if (e.type === 'log') log(e.text);
+      else if (e.type === 'deck') showDeck(e.deck);
+      else if (e.type === 'done') finish(e.summary);
+      else if (e.type === 'error') { stopRun(); gameOver(e.message); }
+    },
+  };
+
+  async function chooseDeck() {
+    if (running) return; sfx.blip();
+    if (api()) showDeck(await api().choose_deck());
+    else showDeck({ demo: true, path: '/DEMO/2026-10-24-TECH78-DATA_BI-AI-GENAI.HTML', name: '2026-10-24-TECH78-DATA_BI-AI-GENAI.HTML',
+                    folder: '~/DECKS', slides: 885, size_mb: 1.0 });
+  }
+  $('slot').onclick = chooseDeck;
+  $('outBtn').onclick = async () => {
+    if (!deck || running) return; sfx.blip();
+    const p = api() ? await api().choose_output(deck.path) : null;
+    if (p) { output = p; $('outPath').textContent = p; }
+  };
+
+  // drag & drop: the Python side receives the real file path and answers with a 'deck' event
+  ['dragenter', 'dragover'].forEach(ev => document.addEventListener(ev, e => { e.preventDefault(); $('slot').classList.add('drag'); }));
+  ['dragleave', 'drop'].forEach(ev => document.addEventListener(ev, e => { e.preventDefault(); $('slot').classList.remove('drag'); }));
+  document.addEventListener('drop', e => { if (!api()) chooseDeck(); });
+
+  async function start() {
+    if (!deck || running) return;
+    running = true; score = 0; lastTick = 0; hud(); cur = null; document.body.classList.add('running');
+    $('start').disabled = true; $('run').classList.add('on'); $('log').textContent = ''; setBar(0);
+    mood = 'busy'; sfx.start(); anim = requestAnimationFrame(animate);
+    const o = { path: deck.path, output, slides: $('slides').value.trim() || null, exact: opts.exact, backgrounds: opts.backgrounds,
+                breaks: opts.breaks, video: opts.video, download: opts.download };
+    if (api()) { const ok = await api().start(o); if (!ok) { stopRun(); gameOver('ALREADY RUNNING'); } }
+    else demoRun(o);
+  }
+  $('start').onclick = start;
+  function stopRun() { running = false; cancelAnimationFrame(anim); mood = 'idle'; $('start').disabled = !deck; }
+
+  function finish(s) {
+    stopRun(); setBar(1); lastSummary = s; score = s.slides; mood = 'party';
+    const hi = Math.max(store.get('hi', 0), s.slides); store.set('hi', hi); store.set('credits', store.get('credits', 0) + 1); hud();
+    const mb = (s.size / 1048576).toFixed(1);
+    $('winStats').innerHTML = '';
+    [['SLIDES', s.slides], ['SIZE', mb + ' MB'], ['LAYOUT', s.exact_layout ? 'PIXEL EXACT' : 'APPROX'],
+     ['BACKDROPS', s.backgrounds ? 'THEME' : 'FLAT'], ['MISSING IMG', s.missing_images.length], ['TIME', s.seconds + ' S']]
+      .forEach(([k, v]) => { const dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = k; dd.textContent = v;
+                             $('winStats').append(dt, dd); });
+    if (s.failed && s.failed.length) { $('winStats').insertAdjacentHTML('beforeend', '<dt>FAILED</dt><dd style="color:var(--red)"></dd>');
+                                       $('winStats').lastElementChild.textContent = s.failed.join(', '); }
+    $('win').classList.add('on'); sfx.win(); $('openBtn').focus();
+    setTimeout(() => { if (mood === 'party') mood = 'idle'; }, 4000);
+  }
+  function gameOver(msg) { $('loseMsg').textContent = String(msg).toUpperCase(); $('lose').classList.add('on'); sfx.lose(); $('contBtn').focus(); }
+  const reset = () => { document.body.classList.remove('running'); $('run').classList.remove('on'); $('start').disabled = !deck; };
+  $('contBtn').onclick = () => { $('lose').classList.remove('on'); reset(); sfx.blip(); };
+  $('againBtn').onclick = () => { $('win').classList.remove('on'); reset(); sfx.blip(); };
+  $('openBtn').onclick = () => { sfx.blip(); if (api() && lastSummary) api().open_path(lastSummary.output); };
+  $('revealBtn').onclick = () => { sfx.blip(); if (api() && lastSummary) api().reveal(lastSummary.output); };
+
+  function demoRun(o) {    // website / browser preview: a simulated run
+    const total = o.slides ? 40 : deck.slides, t0 = performance.now();
+    const seq = [['read', 300], ['backgrounds', 1200], ['layout', 2600]];
+    let i = 0;
+    const next = () => {
+      if (i < seq.length) { onProgress(seq[i][0], 0, 1); log(['READING DECK', 'RENDERING 56 THEME BACKDROPS', 'MEASURING THE LAYOUT OF ' + total + ' SLIDES'][i]);
+                            setTimeout(next, seq[i++][1]); return; }
+      let n = 0; log(total + ' SLIDES FOUND');
+      const iv = setInterval(() => { n = Math.min(total, n + Math.ceil(total / 90)); onProgress('slides', n, total);
+        if (n >= total) { clearInterval(iv); onProgress('save', 0, 1); log('SAVED DECK.PPTX');
+          setTimeout(() => finish({ output: 'deck.pptx', slides: total, failed: [], missing_images: [], exact_layout: o.exact,
+                                    backgrounds: o.backgrounds, size: 251066775 * total / 885, seconds: Math.round((performance.now() - t0) / 1000) }), 500); } }, 40);
+    };
+    next();
+  }
+
+  /* ---------------- keyboard ---------------- */
+  addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') { if (e.key === 'Enter') start(); return; }
+    if (e.key === 'Escape') { if (document.querySelector('.ov.on') && !running) reset(); $('win').classList.remove('on'); $('lose').classList.remove('on'); }
+    else if (e.key === 'Enter' && !document.querySelector('.ov.on') && document.activeElement.tagName !== 'BUTTON') start();
+    else if (e.key.toLowerCase() === 'o' && !document.querySelector('.ov.on')) chooseDeck();
+    else if (e.key.toLowerCase() === 'm') $('mute').click();
+  });
+
+  /* ---------------- boot ---------------- */
+  async function boot() {
+    if (api()) {
+      const env = await api().env();
+      $('ver').textContent = env.version;
+      const badge = (ok, name) => `<span class="${ok ? 'ok' : 'no'}">${name} ${ok ? '★' : '×'}</span>`;
+      $('env').innerHTML = `${badge(env.chrome, 'CHROME')} &nbsp; ${badge(env.calibri, 'CALIBRI')}`;
+      if (!env.chrome) log('NO CHROME: APPROXIMATE LAYOUT ONLY');
+    } else {
+      $('env').innerHTML = '<span class="ok">CHROME ★</span> &nbsp; <span class="ok">CALIBRI ★</span>';
+      $('demoBadge').style.display = 'block';
+      const state = new URLSearchParams(location.search).get('state');      // ?state=loaded|run|win (previews)
+      if (state) { muted = true; await chooseDeck(); if (state !== 'loaded') { await start(); }
+                   if (state === 'win') finish({ output: 'deck.pptx', slides: 885, failed: [], missing_images: [], exact_layout: true,
+                                                 backgrounds: true, size: 251066775, seconds: 72 });
+                   return; }
+      // browsers only allow sound after a gesture: attract mode until the first key / click
+      playIntro().catch(() => {
+        const a = $('attract'); a.classList.add('on');
+        const wake = () => { a.classList.remove('on'); playIntro().catch(() => {}); removeEventListener('keydown', wake, true); };
+        a.onclick = wake; addEventListener('keydown', wake, true);
+      });
+    }
+  }
+  let booted = false;
+  const go = () => { if (!booted) { booted = true; boot(); } };
+  addEventListener('pywebviewready', go);
+  addEventListener('load', () => setTimeout(() => { if (!window.pywebview) go(); }, 400));
+})();
+</script>
+</body>
+</html>

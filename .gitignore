@@ -1,0 +1,8 @@
+# build outputs and environments
+.build-venv/
+.venv/
+dist/
+build/pyinstaller/
+site/downloads/
+__pycache__/
+.DS_Store

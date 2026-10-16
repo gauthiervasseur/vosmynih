@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>восьминіг · HTML deck to PowerPoint</title>
+<meta name="description" content="восьминіг turns Marp HTML slide decks into editable PowerPoint files that keep the HTML's exact layout.">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<style>
+@font-face { font-family: 'Press Start 2P'; src: url(assets/PressStart2P-Regular.ttf) format('truetype'); font-display: swap; }
+:root {
+  --bg: #0b0221; --bg2: #160740; --bg3: #1f0b55; --mag: #ff2bd6; --cyan: #22e8ff; --yel: #ffe83b; --grn: #39ff14;
+  --red: #ff3b5c; --ink: #ece8ff; --dim: #a59bd9; --line: #3a1d7a;
+  --px: 'Press Start 2P', ui-monospace, monospace; --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; background: var(--bg); }
+body { margin: 0; color: var(--ink); background: var(--bg); font: 16px/1.65 var(--mono); overflow-x: hidden; }
+a { color: var(--cyan); }
+img { max-width: 100%; display: block; }
+.wrap { width: min(1100px, 100% - 32px); margin: 0 auto; }
+h1, h2, h3, .px { font-family: var(--px); font-weight: normal; letter-spacing: .02em; }
+h2 { font-size: clamp(18px, 3vw, 26px); color: var(--yel); text-shadow: 3px 3px 0 var(--mag); margin: 0 0 28px; line-height: 1.5; }
+h3 { font-size: 13px; line-height: 1.7; margin: 0 0 12px; color: var(--cyan); }
+section { padding: 84px 0; position: relative; }
+.crt { position: fixed; inset: 0; pointer-events: none; z-index: 90;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,.18) 0 1px, transparent 1px 3px); }
+
+/* nav */
+nav { position: sticky; top: 0; z-index: 60; background: rgba(11,2,33,.92); border-bottom: 3px solid var(--line); backdrop-filter: blur(4px); }
+nav .wrap { display: flex; align-items: center; gap: 22px; height: 58px; }
+nav .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; font: 13px var(--px); }
+nav .logo img { width: 30px; height: 30px; image-rendering: pixelated; }
+nav .links { margin-left: auto; display: flex; gap: 20px; }
+nav .links a { font: 9px var(--px); color: var(--dim); text-decoration: none; }
+nav .links a:hover { color: var(--yel); }
+nav button { font: 9px var(--px); color: var(--grn); background: none; border: 2px solid var(--line); padding: 7px 9px; cursor: pointer; }
+@media (max-width: 760px) { nav .links { display: none; } nav button { margin-left: auto; } }
+
+/* hero */
+.hero { position: relative; padding: 56px 0 140px; text-align: center; overflow: hidden;
+  background: radial-gradient(ellipse 90% 70% at 50% 0%, #2c0b63 0%, var(--bg) 70%); }
+.floor { position: absolute; left: -50%; right: -50%; bottom: -10px; height: 220px; pointer-events: none;
+  background: repeating-linear-gradient(to right, transparent 0 58px, rgba(255,43,214,.6) 58px 60px),
+              repeating-linear-gradient(to bottom, transparent 0 38px, rgba(255,43,214,.6) 38px 40px);
+  transform: perspective(260px) rotateX(62deg); transform-origin: 50% 100%; animation: floor 1.2s linear infinite;
+  -webkit-mask-image: linear-gradient(to top, #000 30%, transparent); mask-image: linear-gradient(to top, #000 30%, transparent); }
+@keyframes floor { to { background-position: 0 0, 0 40px; } }
+#octo { width: 230px; height: 200px; image-rendering: pixelated; margin: 0 auto; max-width: 70vw; height: auto; aspect-ratio: 161 / 140; }
+.hero h1 { font-size: clamp(30px, 8.5vw, 76px); margin: 10px 0 0; color: #fff; line-height: 1.1;
+  text-shadow: 0 0 8px var(--mag), 0 0 26px var(--mag), 5px 5px 0 #6a0b8f; }
+.tag { font: clamp(10px, 1.6vw, 14px)/2 var(--px); color: var(--cyan); margin: 22px 0 0; }
+.tag b { color: var(--yel); font-weight: normal; }
+.lede { max-width: 640px; margin: 22px auto 0; color: var(--dim); }
+.ctas { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-top: 34px; position: relative; z-index: 2; }
+.btn { display: inline-block; font: 12px/1.6 var(--px); text-decoration: none; padding: 16px 20px; cursor: pointer; border: 0; }
+.btn.main { background: var(--yel); color: #1a0033; box-shadow: 0 0 0 4px #000, 6px 6px 0 4px var(--mag), 0 0 30px rgba(255,232,59,.4); }
+.btn.main:hover { background: #fff36e; }
+.btn.alt { background: transparent; color: var(--ink); box-shadow: 0 0 0 3px var(--ink); }
+.btn.alt:hover { color: var(--yel); box-shadow: 0 0 0 3px var(--yel); }
+.btn small { display: block; font-size: 8px; opacity: .75; margin-top: 4px; }
+
+/* steps & tentacles */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.card { background: var(--bg2); border: 3px solid var(--line); padding: 24px; position: relative; }
+.card .n { font: 26px var(--px); color: var(--mag); text-shadow: 3px 3px 0 #000; display: block; margin-bottom: 14px; }
+.card p { margin: 0; color: var(--dim); }
+.ten { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.ten .card { padding: 20px; }
+.ten .card .n { font-size: 9px; color: var(--yel); text-shadow: none; }
+.ten .card:hover { border-color: var(--cyan); }
+@media (max-width: 900px) { .ten { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) { .steps, .ten { grid-template-columns: 1fr; } }
+
+/* high scores */
+.scores { width: 100%; border-collapse: collapse; font-family: var(--px); font-size: 11px; }
+.scores td { padding: 14px 10px; border-bottom: 2px dashed var(--line); }
+.scores td:first-child { color: var(--dim); width: 60px; }
+.scores td:last-child { text-align: right; color: var(--grn); white-space: nowrap; }
+.note { color: var(--dim); font-size: 14px; margin-top: 16px; }
+
+/* demo cabinet */
+.cab { margin: 0 auto; max-width: 1040px; padding: 18px; background: linear-gradient(#2a0f63, #12052e); border: 4px solid #000;
+  box-shadow: 0 0 0 4px var(--mag), 0 0 50px rgba(255,43,214,.35); border-radius: 18px 18px 6px 6px; }
+.cab .marquee { font: 12px var(--px); text-align: center; color: var(--yel); padding: 4px 0 14px; letter-spacing: .2em; }
+.screen { position: relative; width: 100%; aspect-ratio: 1000 / 780; background: #000; border-radius: 10px; overflow: hidden; border: 4px solid #000; }
+.screen iframe { position: absolute; left: 0; top: 0; width: 1000px; height: 780px; border: 0; transform-origin: 0 0; }
+.cab .hint { font-size: 13px; color: var(--dim); text-align: center; margin-top: 14px; }
+.shots { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 26px; }
+.shots img { border: 3px solid var(--line); }
+@media (max-width: 640px) { .shots { grid-template-columns: 1fr; } }
+
+/* downloads */
+.dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.dl .card { display: flex; flex-direction: column; }
+.dl .card h3 { color: var(--yel); }
+.dl .card .btn { margin-top: auto; text-align: center; }
+.dl .meta { font-size: 13px; color: var(--dim); margin: 0 0 18px; overflow-wrap: anywhere; }
+.dl .soon { margin-top: auto; font: 9px/1.8 var(--px); color: var(--dim); border: 3px dashed var(--line); padding: 14px; text-align: center; }
+@media (max-width: 900px) { .dl { grid-template-columns: 1fr; } }
+.req { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 34px; }
+.req ol, .req ul { margin: 0; padding-left: 20px; color: var(--dim); }
+.req li { margin-bottom: 8px; }
+.req b { color: var(--ink); font-weight: normal; }
+code { font-family: var(--mono); color: var(--yel); background: var(--bg3); padding: 1px 5px; }
+@media (max-width: 760px) { .req { grid-template-columns: 1fr; } }
+
+/* faq */
+details { background: var(--bg2); border: 3px solid var(--line); margin-bottom: 12px; }
+summary { cursor: pointer; padding: 16px 18px; font: 11px/1.8 var(--px); color: var(--cyan); list-style: none; }
+summary::before { content: '▶ '; color: var(--yel); }
+details[open] summary::before { content: '▼ '; }
+details p { margin: 0; padding: 0 18px 18px; color: var(--dim); }
+
+footer { padding: 46px 0 60px; text-align: center; color: var(--dim); font-size: 13px; border-top: 3px solid var(--line); }
+footer .px { font-size: 10px; color: var(--yel); margin-bottom: 14px; animation: blink 1.1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* attract screen */
+#attract { position: fixed; inset: 0; z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+  background: rgba(11,2,33,.97); cursor: pointer; text-align: center; padding: 16px; }
+#attract.on { display: flex; }
+#attract canvas { width: 230px; height: auto; aspect-ratio: 161 / 140; image-rendering: pixelated; }
+#attract .t { font: clamp(26px, 7vw, 46px) var(--px); color: #fff; text-shadow: 0 0 8px var(--mag), 0 0 24px var(--mag); }
+#attract .k { font: 14px var(--px); color: var(--yel); animation: blink 1s steps(2) infinite; }
+#attract .s { font: 9px var(--px); color: var(--dim); }
+#attract button { font: 9px var(--px); background: none; border: 0; color: var(--dim); text-decoration: underline; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .floor, footer .px, #attract .k { animation: none; } }
+</style>
+<script src="assets/sprite.js"></script>
+</head>
+<body>
+<div id="attract" role="dialog" aria-label="Press any key">
+  <canvas id="octo2" width="161" height="140" aria-hidden="true"></canvas>
+  <div class="t">ВОСЬМИНІГ</div>
+  <div class="k">PRESS ANY KEY</div>
+  <div class="s">THE OCTOPUS HAS SOMETHING TO SAY</div>
+  <button type="button" id="quiet">ENTER WITHOUT SOUND</button>
+</div>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="#top"><img src="assets/icon-64.png" alt="">ВОСЬМИНІГ</a>
+    <div class="links"><a href="#play">HOW TO PLAY</a><a href="#tentacles">8 TENTACLES</a><a href="#demo">DEMO</a><a href="#download">DOWNLOAD</a></div>
+    <button type="button" id="mute">SOUND ON</button>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <canvas id="octo" width="161" height="140" aria-label="The восьминіг octopus"></canvas>
+    <h1>ВОСЬМИНІГ</h1>
+    <p class="tag">MARP HTML DECKS IN <b>▶</b> EDITABLE POWERPOINT OUT</p>
+    <p class="lede">Eight tentacles, one job: take a slide deck exported from Marp and hand you back a PowerPoint where every title, bullet,
+      table and picture sits exactly where the HTML put it, and stays editable.</p>
+    <div class="ctas">
+      <a class="btn main" href="#download">▶ DOWNLOAD FOR MAC<small>APPLE SILICON · 23 MB</small></a>
+      <a class="btn alt" href="#demo">PLAY THE DEMO<small>IN YOUR BROWSER</small></a>
+    </div>
+  </div>
+  <div class="floor"></div>
+</header>
+
+<section id="play">
+  <div class="wrap">
+    <h2>HOW TO PLAY</h2>
+    <div class="steps">
+      <div class="card"><span class="n">1</span><h3>INSERT DECK</h3><p>Drop your Marp <code>.html</code> export on the cartridge slot, or click it to browse. Keep it next to its images.</p></div>
+      <div class="card"><span class="n">2</span><h3>PRESS START</h3><p>The octopus measures every element of every slide with Chrome, paints the theme backdrops and inks each slide.</p></div>
+      <div class="card"><span class="n">3</span><h3>COLLECT THE .PPTX</h3><p>Stage clear: your PowerPoint lands next to the deck. Open it and edit any text, table or picture.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="tentacles" style="background:linear-gradient(transparent, #12052e 30%, #12052e 70%, transparent)">
+  <div class="wrap">
+    <h2>8 TENTACLES</h2>
+    <div class="ten">
+      <div class="card"><span class="n">TENTACLE 1</span><h3>PIXEL-EXACT LAYOUT</h3><p>Chrome lays out each slide with the deck's own CSS; boxes land within about 1&nbsp;px of the HTML.</p></div>
+      <div class="card"><span class="n">TENTACLE 2</span><h3>SAME LINE BREAKS</h3><p>Lines wrap exactly where the browser wrapped them, measured with the Calibri PowerPoint uses.</p></div>
+      <div class="card"><span class="n">TENTACLE 3</span><h3>THEME BACKDROPS</h3><p>Colours, patterns and logos drawn by the theme become real slide backgrounds.</p></div>
+      <div class="card"><span class="n">TENTACLE 4</span><h3>EDITABLE TEXT</h3><p>Titles, paragraphs and bullet lists are native text boxes with their fonts, sizes and colours.</p></div>
+      <div class="card"><span class="n">TENTACLE 5</span><h3>NATIVE TABLES</h3><p>Tables come back as PowerPoint tables, with cell sizes, fills and borders from the CSS.</p></div>
+      <div class="card"><span class="n">TENTACLE 6</span><h3>CODE IN COLOUR</h3><p>Code blocks keep their syntax highlighting, in Consolas, as monospace text you can edit.</p></div>
+      <div class="card"><span class="n">TENTACLE 7</span><h3>IMAGES &amp; MATH</h3><p>Pictures keep their fit and crop; equations, GIFs and videos come along too.</p></div>
+      <div class="card"><span class="n">TENTACLE 8</span><h3>SPEAKER NOTES</h3><p>Presenter notes move to PowerPoint's notes, with photo credits added.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="scores">
+  <div class="wrap">
+    <h2>HIGH SCORES</h2>
+    <table class="scores">
+      <tr><td>1ST</td><td>SLIDES IN ONE DECK</td><td>885</td></tr>
+      <tr><td>2ND</td><td>TIME TO CONVERT THEM</td><td>72 S</td></tr>
+      <tr><td>3RD</td><td>TEXT POSITION VS THE HTML</td><td>±1 PX</td></tr>
+      <tr><td>4TH</td><td>SLIDES LOST</td><td>0</td></tr>
+    </table>
+    <p class="note">Measured on an 885-slide course deck on an Apple Silicon Mac, comparing PowerPoint's own PDF export with Chrome's rendering.</p>
+  </div>
+</section>
+
+<section id="demo">
+  <div class="wrap">
+    <h2>INSERT COIN · DEMO</h2>
+    <div class="cab">
+      <div class="marquee">★ ВОСЬМИНІГ ★</div>
+      <div class="screen" id="screen"><iframe id="game" src="play/index.html" title="восьминіг demo" loading="lazy"></iframe></div>
+      <p class="hint">This is the real app screen in demo mode: click the cartridge, then PRESS START. The desktop app converts real files.</p>
+    </div>
+    <div class="shots">
+      <img src="assets/shot-loaded.png" alt="восьминіг with a deck inserted, options and the PRESS START button" loading="lazy" width="1000" height="780">
+      <img src="assets/shot-win.png" alt="The STAGE CLEAR screen after converting 885 slides" loading="lazy" width="1000" height="780">
+    </div>
+  </div>
+</section>
+
+<section id="download" style="background:linear-gradient(transparent, #12052e 25%)">
+  <div class="wrap">
+    <h2>DOWNLOAD · v1.0.0</h2>
+    <div class="dl">
+      <div class="card"><h3>MAC · APPLE SILICON (M1-M4)</h3><p class="meta">vosmynih-1.0.0-macos-arm64.dmg · macOS 11 or later<br>SHA-256: a8e71e5a57314d64…</p>
+        <a class="btn main" href="downloads/vosmynih-1.0.0-macos-arm64.dmg" download>▶ DOWNLOAD .DMG<small>23 MB</small></a></div>
+      <div class="card"><h3>WINDOWS</h3><p class="meta">Build the installer on a Windows PC with <code>build\build_windows.ps1</code> (in the source download). It makes a setup.exe and a portable zip.</p><div class="soon">INSTALLER<br>BUILT FROM SOURCE</div></div>
+      <div class="card"><h3>SOURCE CODE</h3><p class="meta">vosmynih-1.0.0-source.zip · Python app, converter, build scripts<br>SHA-256: 2563451631d17334…</p>
+        <a class="btn main" href="downloads/vosmynih-1.0.0-source.zip" download>▶ DOWNLOAD SOURCE<small>333 KB</small></a></div>
+    </div>
+    <div class="req">
+      <div class="card"><h3>INSTALL ON MAC</h3>
+        <ol><li>Open the <code>.dmg</code> and drag <b>восьминіг</b> onto <b>Applications</b>.</li>
+            <li>First launch: right-click the app, choose <b>Open</b>, then <b>Open</b> again. The app is not notarised by Apple, so macOS asks once.</li>
+            <li>The octopus says hello. Insert a deck.</li></ol></div>
+      <div class="card"><h3>SYSTEM REQUIREMENTS</h3>
+        <ul><li><b>macOS 11+</b> (Apple Silicon).</li>
+            <li><b>Google Chrome</b>: it measures the layout and paints the backdrops. Without it you get an approximate layout.</li>
+            <li><b>Microsoft Office</b>: its Calibri font makes line breaks match PowerPoint exactly.</li>
+            <li>Decks exported by <b>Marp</b> (HTML).</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <h2>CONTINUE? · FAQ</h2>
+    <details><summary>IS MY DECK UPLOADED ANYWHERE?</summary><p>No. Everything runs on your computer: the app reads the HTML and its images from disk and writes the .pptx next to it. Only images your deck links from the web are downloaded, and you can switch that off (WEB IMAGES: OFF).</p></details>
+    <details><summary>WHY DOES IT NEED CHROME?</summary><p>Your deck's look comes from CSS. Rather than guessing, the octopus asks a real browser engine where every element goes, then rebuilds that layout from native PowerPoint objects.</p></details>
+    <details><summary>WHY ARE THERE LINE BREAKS IN MY PARAGRAPHS?</summary><p>To guarantee that each line wraps exactly as in the HTML, wrapped lines get soft line breaks (Shift+Enter). If you rewrite a paragraph, delete them, or turn COPY LINE BREAKS off before converting.</p></details>
+    <details><summary>WHAT ABOUT WINDOWS?</summary><p>The app runs on Windows too; this release ships the build script (<code>build\build_windows.ps1</code>, in the source download) that makes a setup.exe on a Windows PC.</p></details>
+    <details><summary>WHY AN OCTOPUS?</summary><p>Восьминіг is Ukrainian for octopus. Eight arms are about what it takes to move titles, bullets, tables, code, pictures, equations, backdrops and notes at once.</p></details>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="px">GAME OVER? INSERT COIN TO CONTINUE</div>
+    <p>восьминіг v1.0.0 · Pixel font: Press Start 2P (SIL Open Font License) · Octopus sound synthesised from scratch</p>
+  </div>
+</footer>
+<div class="crt"></div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const store = { get(k, d) { try { const v = localStorage.getItem('octo.site.' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+                  set(k, v) { try { localStorage.setItem('octo.site.' + k, JSON.stringify(v)); } catch (e) {} } };
+
+  /* octopus sprite */
+  const O = window.OCTO, P = 7, bubbles = []; let frame = 0, tick = 0, blinkT = 0;
+  function draw(cv) {
+    const g = cv.getContext('2d'); g.clearRect(0, 0, cv.width, cv.height);
+    const bob = Math.round(Math.sin(tick / 8) * 3), blink = blinkT > 0;
+    O.frames[frame].forEach((row, r) => [...row].forEach((ch, c) => {
+      if (ch === '.') return;
+      g.fillStyle = blink && (ch === 'W' || ch === 'K') ? O.palette.M : O.palette[ch];
+      g.fillRect(c * P, 20 + r * P + bob, P, P);
+    }));
+    g.strokeStyle = '#22e8ff';
+    bubbles.forEach(b => g.strokeRect(Math.round(b.x) + .5, Math.round(b.y) + .5, b.s, b.s));
+  }
+  setInterval(() => {
+    if (tick % 9 === 0) frame ^= 1;
+    if (blinkT > 0) blinkT--; else if (Math.random() < .006) blinkT = 6;
+    if (Math.random() < .06) bubbles.push({ x: 40 + Math.random() * 80, y: 30, s: Math.random() < .3 ? 5 : 3, v: .6 + Math.random() });
+    for (let i = bubbles.length - 1; i >= 0; i--) { bubbles[i].y -= bubbles[i].v; if (bubbles[i].y < -6) bubbles.splice(i, 1); }
+    draw($('octo')); if ($('attract').classList.contains('on')) draw($('octo2'));
+    tick++;
+  }, 33);
+
+  /* sound: the octopus greets visitors; browsers need a gesture first */
+  let muted = store.get('muted', false);
+  const audio = new Audio('assets/octopus.wav');
+  const setMute = m => { muted = m; store.set('muted', m); $('mute').textContent = m ? 'SOUND OFF' : 'SOUND ON'; };
+  setMute(muted);
+  $('mute').onclick = () => { setMute(!muted); if (!muted) { audio.currentTime = 0; audio.play().catch(() => {}); } };
+  const attract = $('attract');
+  const seen = { get() { try { return sessionStorage.getItem('octo.seen') === '1'; } catch (e) { return false; } },
+                 set() { try { sessionStorage.setItem('octo.seen', '1'); } catch (e) {} } };   // once per visit
+  function wake(withSound) {
+    attract.classList.remove('on');
+    removeEventListener('keydown', onKey, true);
+    if (withSound && !muted) { audio.currentTime = 0; audio.play().catch(() => {}); }
+  }
+  const onKey = e => { e.preventDefault(); wake(true); };
+  const silent = new URLSearchParams(location.search).has('silent');     // ?silent: no attract screen
+  if (!muted && !seen.get() && !silent) {
+    audio.play().then(() => seen.set()).catch(() => {
+      attract.classList.add('on');
+      addEventListener('keydown', onKey, true);
+      attract.onclick = e => { if (e.target.id !== 'quiet') { seen.set(); wake(true); } };
+      $('quiet').onclick = () => { seen.set(); wake(false); };
+    });
+  }
+
+  /* scale the 1000x780 app screen into the cabinet */
+  const fit = () => { const s = $('screen').clientWidth / 1000; $('game').style.transform = `scale(${s})`; };
+  addEventListener('resize', fit); fit();
+})();
+</script>
+</body>
+</html>
