@@ -88,7 +88,7 @@ def main():
     icon.resize((256, 256), Image.LANCZOS).save(os.path.join(assets, "icon-256.png"))
     screenshots(assets)
 
-    cards, mac_label, mac_arch = [], "SEE DOWNLOADS", "Apple Silicon"
+    cards, platforms = [], []
     dist = os.path.join(ROOT, "dist")
     found = sorted(os.listdir(dist)) if os.path.isdir(dist) else []
     for name in found:
@@ -97,12 +97,12 @@ def main():
         if m:
             shutil.copy(path, downloads)
             arch = "Apple Silicon (M1-M4)" if m.group(1) == "arm64" else "Intel"
-            if m.group(1) == "arm64":
-                mac_label, mac_arch = f"{arch.split(' (')[0].upper()} · {mb(path)}", "Apple Silicon"
+            platforms.append("MAC")
             cards.append(card(f"MAC · {arch.upper()}", f"{name} · macOS 11 or later", f"downloads/{name}", "▶ DOWNLOAD .DMG", mb(path), sha256(path)))
         elif re.match(r"vosmynih-[\d.]+-windows-x64(-setup\.exe|\.zip)$", name):
             shutil.copy(path, downloads)
             kind = "SETUP.EXE" if name.endswith(".exe") else "PORTABLE .ZIP"
+            platforms.append("WINDOWS")
             cards.append(card(f"WINDOWS · {kind}", f"{name} · Windows 10 or 11", f"downloads/{name}", f"▶ DOWNLOAD {kind}", mb(path), sha256(path)))
     if not any("WINDOWS" in c for c in cards):
         cards.append('      <div class="card"><h3>WINDOWS</h3><p class="meta">Build the installer on a Windows PC with '
@@ -115,7 +115,7 @@ def main():
 
     page = open(os.path.join(ROOT, "web", "index.html"), encoding="utf-8").read()
     page = (page.replace("{{VERSION}}", VERSION).replace("{{DOWNLOADS}}", "\n".join(cards))
-                .replace("{{MAC_LABEL}}", mac_label).replace("{{MAC_ARCH}}", mac_arch))
+                .replace("{{PLATFORMS}}", " · ".join(dict.fromkeys(platforms)) or "SOURCE CODE"))
     with open(os.path.join(SITE, "index.html"), "w", encoding="utf-8") as fh:
         fh.write(page)
     total = sum(os.path.getsize(os.path.join(d, f)) for d, _, fs in os.walk(SITE) for f in fs)
