@@ -91,8 +91,8 @@ SELFTEST_DECK="/path/to/deck.html" ./build/build_macos.sh /opt/homebrew/bin/pyth
 # Build for Windows (run ON a Windows PC; makes a zip, and a setup.exe if Inno Setup 6 is installed)
 powershell -ExecutionPolicy Bypass -File build\build_windows.ps1
 
-# Build both platforms in the cloud: copy build/github-actions-build.yml to
-# <repo>/.github/workflows/ and push a tag like vosmynih-v1.0.0
+# Build all platforms in the cloud (.github/workflows/vosmynih.yml): push a tag like vosmynih-v1.0.0;
+# the installers land on the GitHub Release. Copy them into dist/, then build the site.
 
 # Regenerate the octopus sprite, sound and icons
 python tools/make_assets.py
